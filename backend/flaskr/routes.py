@@ -44,7 +44,7 @@ def get_categories():
         formatted_categories = {}
         for category in categories:
             formatted_categories[category.id] = category.type
-        return jsonify({"seccess": True, "categories": formatted_categories})
+        return jsonify({"success": True, "categories": formatted_categories})
 
     except:
         abort(422)
@@ -67,7 +67,7 @@ def get_questions():
 
         return jsonify(
             {
-                "seccess": True,
+                "success": True,
                 "questions": current_questions,
                 "total_questions": len(questions),
                 "current_category": None,
@@ -97,7 +97,7 @@ def delete_question(question_id):
 
         return jsonify(
             {
-                "seccess": True,
+                "success": True,
                 "deleted": question_id,
                 "questions": current_questions,
                 "total_questions": len(questions),
@@ -192,7 +192,7 @@ def questions_by_category(category_id):
 
         return jsonify(
             {
-                "seccess": True,
+                "success": True,
                 "questions": current_questions,
                 "total_questions": len(questions),
                 "current_category": current_category.type.format(),
