@@ -1,12 +1,12 @@
-"""Application routes."""
-import os
+"""Application routes"""
+import os, sys
 from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func
 from flask_cors import CORS
 from flask import current_app as app
-import random
-
 from .models import Question, Category
+
 
 QUESTIONS_PER_PAGE = 10
 
@@ -112,6 +112,8 @@ def delete_question(question_id):
 def create_question():
     body = request.get_json()
 
+    # if the body containts a search term execute the search function
+    # otherwise continue with creating a new question
     search_term = body.get("searchTerm")
     if search_term:
         return search_questions(search_term)
@@ -203,30 +205,58 @@ def questions_by_category(category_id):
         abort(404)
 
 
-"""
-@TODO: 
-Create a POST endpoint to get questions to play the quiz. 
-This endpoint should take category and previous question parameters 
-and return a random questions within the given category, 
-if provided, and that is not one of the previous questions. 
+@app.route("/quizzes", methods=["POST"])
+def random_quiz_question():
+    body = request.get_json()
+    try:
+        category = body.get("quiz_category")
+        prev_questions = body.get("previous_questions")
 
-TEST: In the "Play" tab, after a user selects "All" or a category,
-one question at a time is displayed, the user is allowed to answer
-and shown whether they were correct or not. 
-"""
+        if not body or category is None or prev_questions is None:
+            abort(400)
 
-"""
-@TODO: 
-Create error handlers for all expected errors 
-including 404 and 422. 
-"""
+        # if category id is 0 query the database for questions from all categories
+        # otherwise query the database for questions from the selected category
+
+        if category["id"] == 0:
+            category_questions = Question.query.order_by(func.random())
+
+        else:
+            category_questions = Question.query.filter(
+                Question.category == category["id"]
+            ).order_by(func.random())
+
+        # select a question that is not in the previous questions list
+        new_question = category_questions.filter(
+            Question.id.notin_(prev_questions)
+        ).first()
+
+        if new_question is None:
+            # no more questions to be played
+            return jsonify({"success": True})
+
+        return jsonify({"success": True, "question": new_question.format()})
+
+    except:
+        abort(422)
+
+
+"""Error handlers"""
+
+
+@app.errorhandler(400)
+def not_found(error):
+    return jsonify({"success": False, "error": 400, "message": "Bad Request"}), 400
 
 
 @app.errorhandler(404)
 def not_found(error):
-    return jsonify({"success": False, "error": 404, "message": "Not found"}), 404
+    return jsonify({"success": False, "error": 404, "message": "Not Found"}), 404
 
 
 @app.errorhandler(422)
 def not_found(error):
-    return jsonify({"success": False, "error": 422, "message": "Not found"}), 422
+    return (
+        jsonify({"success": False, "error": 422, "message": "Unprocessable Entity"}),
+        422,
+    )
