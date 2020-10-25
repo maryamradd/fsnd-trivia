@@ -62,19 +62,6 @@ flask run
 Base URL: the api runs locally at port 5000. with the base URL is http://localhost:5000/
 
 
-### Error Handling 
-
-Errors are returned as json objects in the following format:
-
-
-The error types that the API returns:
-- 400: `Bad Request`
-- 404: `Not Found`
-- 422: `Unprocessable Entity`
-- 405: `Method Not Allowed`
-- 500: `Internal Server Error`
-
-
 ### Endpoints
 
 #### GET /questions
@@ -249,9 +236,9 @@ Response:
 
 #### POST /questions
 
-- can be used as a search query or for creating a new question based of the body of the request
+- can be used as a search query or for creating a new question based on the body of the request
 
-##### Searching questions 
+#### Searching questions 
 
 Request Body:
 
@@ -285,7 +272,7 @@ Response:
 }
 ```
 
-##### Creating new questions
+#### Creating new questions
 
 - a json object specifing the details of the question to be created:
     - `question`: (string) question in string format
@@ -384,7 +371,26 @@ Response:
 }
 ```
 
+### Error Handling 
 
+Errors are returned as json objects in the following format:
+
+
+The error types that the API returns:
+- 400: `Bad Request`
+- 404: `Not Found`
+- 422: `Unprocessable Entity`
+- 405: `Method Not Allowed`
+- 500: `Internal Server Error`
+
+Example response:
+```
+{
+    "error": 404,
+    "message": "Not Found",
+    "success": false
+}
+```
 
 ### Testing
 
