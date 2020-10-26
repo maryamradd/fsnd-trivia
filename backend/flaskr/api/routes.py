@@ -120,7 +120,7 @@ def create_question():
 
     else:
         for key in ["question", "answer", "category", "difficulty"]:
-            if (not body) or (body[key] == None):
+            if body.get(key) == None:
                 abort(422)
 
         new_question = body.get("question", None)
@@ -209,12 +209,14 @@ def questions_by_category(category_id):
 def random_quiz_question():
     body = request.get_json()
     try:
+
+        if (body.get("quiz_category") == None) or (
+            (body.get("previous_questions") == None)
+        ):
+            abort(422)
+
         category = body.get("quiz_category")
         prev_questions = body.get("previous_questions")
-
-        if not body or category is None or prev_questions is None:
-            abort(400)
-
         # if category id is 0 query the database for questions from all categories
         # otherwise query the database for questions from the selected category
 
