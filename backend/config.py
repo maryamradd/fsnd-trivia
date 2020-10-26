@@ -18,3 +18,10 @@ class Config:
     SQLALCHEMY_DATABASE_URI = environ.get("DATABASE_URI")
     SQLALCHEMY_ECHO = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+
+class TestConfig(Config):
+    """Testing configuration"""
+
+    DEBUG = True
+    SQLALCHEMY_DATABASE_URI = environ.get("TEST_DATABASE_URI")

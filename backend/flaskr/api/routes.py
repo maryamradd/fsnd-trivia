@@ -1,11 +1,10 @@
-"""Application routes"""
+"""Application routes."""
 import os, sys
 from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
-from flask_cors import CORS
-from flask import current_app as app
-from .models import Question, Category
+from flaskr.models import Question, Category
+from . import api
 
 
 QUESTIONS_PER_PAGE = 10
@@ -25,7 +24,7 @@ def paginate_questions(request, selection):
     return current_questions
 
 
-@app.after_request
+@api.after_request
 def after_request(response):
     response.headers.add(
         "Access-Control-Allow-Headers", "Content-Type,Authorization,true"
@@ -33,10 +32,11 @@ def after_request(response):
     response.headers.add(
         "Access-Control-Allow-Methods", "GET,PATCH,POST,DELETE,OPTIONS"
     )
+    response.headers.add("Content-Type", "application/json")
     return response
 
 
-@app.route("/categories", methods=["GET"])
+@api.route("/categories", methods=["GET"])
 def get_categories():
 
     try:
@@ -50,7 +50,7 @@ def get_categories():
         abort(422)
 
 
-@app.route("/questions", methods=["GET"])
+@api.route("/questions", methods=["GET"])
 def get_questions():
 
     try:
@@ -79,7 +79,7 @@ def get_questions():
         abort(422)
 
 
-@app.route("/questions/<int:question_id>", methods=["DELETE"])
+@api.route("/questions/<int:question_id>", methods=["DELETE"])
 def delete_question(question_id):
 
     try:
@@ -108,7 +108,7 @@ def delete_question(question_id):
         abort(422)
 
 
-@app.route("/questions", methods=["POST"])
+@api.route("/questions", methods=["POST"])
 def create_question():
     body = request.get_json()
 
@@ -120,7 +120,7 @@ def create_question():
 
     else:
         for key in ["question", "answer", "category", "difficulty"]:
-            if not body or body[key] == None or body[key] == "":
+            if (not body) or (body[key] == None):
                 abort(422)
 
         new_question = body.get("question", None)
@@ -178,7 +178,7 @@ def search_questions(search_term):
         abort(422)
 
 
-@app.route("/categories/<int:category_id>/questions", methods=["GET"])
+@api.route("/categories/<int:category_id>/questions", methods=["GET"])
 def questions_by_category(category_id):
     try:
 
@@ -205,7 +205,7 @@ def questions_by_category(category_id):
         abort(404)
 
 
-@app.route("/quizzes", methods=["POST"])
+@api.route("/quizzes", methods=["POST"])
 def random_quiz_question():
     body = request.get_json()
     try:
@@ -241,22 +241,38 @@ def random_quiz_question():
         abort(422)
 
 
-"""Error handlers"""
+"""Error handlers."""
 
 
-@app.errorhandler(400)
+@api.errorhandler(400)
 def not_found(error):
     return jsonify({"success": False, "error": 400, "message": "Bad Request"}), 400
 
 
-@app.errorhandler(404)
+@api.errorhandler(404)
 def not_found(error):
     return jsonify({"success": False, "error": 404, "message": "Not Found"}), 404
 
 
-@app.errorhandler(422)
+@api.errorhandler(422)
 def not_found(error):
     return (
         jsonify({"success": False, "error": 422, "message": "Unprocessable Entity"}),
         422,
+    )
+
+
+@api.errorhandler(405)
+def not_found(error):
+    return (
+        jsonify({"success": False, "error": 405, "message": "Method Not Allowed"}),
+        405,
+    )
+
+
+@api.errorhandler(500)
+def not_found(error):
+    return (
+        jsonify({"success": False, "error": 500, "message": "Internal Server Error"}),
+        500,
     )
