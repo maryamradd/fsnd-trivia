@@ -1,5 +1,7 @@
 """Application routes."""
-import os, sys
+import os
+import sys
+import re
 from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
@@ -44,6 +46,10 @@ def get_categories():
         formatted_categories = {}
         for category in categories:
             formatted_categories[category.id] = category.type
+
+        if len(formatted_categories) == 0:
+            abort(404)
+
         return jsonify({"success": True, "categories": formatted_categories})
 
     except:
@@ -83,7 +89,8 @@ def get_questions():
 def delete_question(question_id):
 
     try:
-        question = Question.query.filter(Question.id == question_id).one_or_none()
+        question = Question.query.filter(Question.id == question_id)
+        .one_or_none()
 
         if question is None:
             abort(404)
@@ -120,7 +127,7 @@ def create_question():
 
     else:
         for key in ["question", "answer", "category", "difficulty"]:
-            if body.get(key) == None:
+            if body.get(key) is None:
                 abort(422)
 
         new_question = body.get("question", None)
@@ -156,6 +163,12 @@ def create_question():
 def search_questions(search_term):
     questions = []
     try:
+
+        # check if the search term contains special characters
+        regex = re.compile(r"[~\!@#\$%\^&\*\(\)_\+{}\":;'\[\]]")
+        if not regex.search(search_term) is None:
+            abort(422)
+
         search_query = "%{}%".format(search_term)
         search_results = Question.query.filter(
             Question.question.ilike(search_query)
@@ -186,7 +199,8 @@ def questions_by_category(category_id):
             Category.id == category_id
         ).one_or_none()
 
-        questions = Question.query.filter(Question.category == category_id).all()
+        questions = Question.query
+        .filter(Question.category == category_id).all()
         current_questions = paginate_questions(request, questions)
 
         if len(current_questions) == 0 or current_category is None:
@@ -210,15 +224,17 @@ def random_quiz_question():
     body = request.get_json()
     try:
 
-        if (body.get("quiz_category") == None) or (
-            (body.get("previous_questions") == None)
+        if (body.get("quiz_category") is None) or (
+            (body.get("previous_questions") is None)
         ):
             abort(422)
 
         category = body.get("quiz_category")
         prev_questions = body.get("previous_questions")
-        # if category id is 0 query the database for questions from all categories
-        # otherwise query the database for questions from the selected category
+        # if category id is 0 query the database
+        # for questions from all categories
+        # otherwise query the database for questions
+        # from the selected category
 
         if category["id"] == 0:
             category_questions = Question.query.order_by(func.random())
@@ -248,33 +264,44 @@ def random_quiz_question():
 
 @api.errorhandler(400)
 def not_found(error):
-    return jsonify({"success": False, "error": 400, "message": "Bad Request"}), 400
+    return jsonify({
+            "success": False,
+            "error": 400,
+            "message": "Bad Request"
+        }), 400
 
 
 @api.errorhandler(404)
 def not_found(error):
-    return jsonify({"success": False, "error": 404, "message": "Not Found"}), 404
+    return jsonify({
+            "success": False,
+            "error": 404,
+            "message": "Not Found"
+        }), 404
 
 
 @api.errorhandler(422)
 def not_found(error):
-    return (
-        jsonify({"success": False, "error": 422, "message": "Unprocessable Entity"}),
-        422,
-    )
+    return jsonify({
+            "success": False,
+            "error": 422,
+            "message": "Unprocessable Entity"
+        }), 422
 
 
 @api.errorhandler(405)
 def not_found(error):
-    return (
-        jsonify({"success": False, "error": 405, "message": "Method Not Allowed"}),
-        405,
-    )
+    return jsonify({
+        "success": False,
+        "error": 405,
+        "message": "Method Not Allowed"
+        }), 405
 
 
 @api.errorhandler(500)
 def not_found(error):
-    return (
-        jsonify({"success": False, "error": 500, "message": "Internal Server Error"}),
-        500,
-    )
+    return jsonify({
+        "success": False,
+        "error": 500,
+        "message": "Internal Server Error"
+    }), 500
