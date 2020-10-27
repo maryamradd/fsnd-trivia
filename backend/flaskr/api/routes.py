@@ -89,8 +89,8 @@ def get_questions():
 def delete_question(question_id):
 
     try:
-        question = Question.query.filter(Question.id == question_id)
-        .one_or_none()
+        question = Question.query.filter(
+            Question.id == question_id).one_or_none()
 
         if question is None:
             abort(404)
@@ -199,8 +199,8 @@ def questions_by_category(category_id):
             Category.id == category_id
         ).one_or_none()
 
-        questions = Question.query
-        .filter(Question.category == category_id).all()
+        questions = Question.query.filter(
+            Question.category == category_id).all()
         current_questions = paginate_questions(request, questions)
 
         if len(current_questions) == 0 or current_category is None:
@@ -265,28 +265,28 @@ def random_quiz_question():
 @api.errorhandler(400)
 def not_found(error):
     return jsonify({
-            "success": False,
-            "error": 400,
-            "message": "Bad Request"
-        }), 400
+        "success": False,
+        "error": 400,
+        "message": "Bad Request"
+    }), 400
 
 
 @api.errorhandler(404)
 def not_found(error):
     return jsonify({
-            "success": False,
-            "error": 404,
-            "message": "Not Found"
-        }), 404
+        "success": False,
+        "error": 404,
+        "message": "Not Found"
+    }), 404
 
 
 @api.errorhandler(422)
 def not_found(error):
     return jsonify({
-            "success": False,
-            "error": 422,
-            "message": "Unprocessable Entity"
-        }), 422
+        "success": False,
+        "error": 422,
+        "message": "Unprocessable Entity"
+    }), 422
 
 
 @api.errorhandler(405)
@@ -295,7 +295,7 @@ def not_found(error):
         "success": False,
         "error": 405,
         "message": "Method Not Allowed"
-        }), 405
+    }), 405
 
 
 @api.errorhandler(500)
