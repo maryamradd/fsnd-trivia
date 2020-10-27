@@ -1,7 +1,7 @@
 from os import environ
 import json
 from flask_sqlalchemy import SQLAlchemy
-from flaskr import create_app
+from flaskr import create_app, db
 from flaskr.models import Question, Category
 import unittest
 
@@ -59,6 +59,19 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data["success"], True)
         self.assertIn("categories", data)
 
+    def test_fail_get_categories(self):
+        """
+        tests getting a list of categories that doesn't exist on db
+        """
+
+        # delete the category table
+        Category.query.delete()
+        response = self.client.get("/api/categories")
+        data = json.loads(response.data)
+
+        self.assertEqual(response.status_code, 422)
+        self.assertEqual(data["success"], False)
+
     def test_get_questions_by_category(self):
         """
         tests getting questions from a specified categories
@@ -73,12 +86,23 @@ class TriviaTestCase(unittest.TestCase):
         self.assertIn("total_questions", data)
         self.assertIn("current_category", data)
 
+    def test_fail_get_questions_by_category(self):
+        """
+        tests getting questions from a category that doesn't exist
+        """
+
+        response = self.client.get("/api/categories/99/questions")
+        data = json.loads(response.data)
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(data["success"], False)
+
     def test_delete_question_by_id(self):
         """
         tests deleting a question by id
         """
 
-        response = self.client.delete("/api/questions/16")
+        response = self.client.delete("/api/questions/17")
         data = json.loads(response.data)
 
         self.assertEqual(response.status_code, 200)
@@ -103,13 +127,27 @@ class TriviaTestCase(unittest.TestCase):
         tests searching for a question that contains the passed search term
         """
 
-        response = self.client.post("/api/questions", json={"searchTerm": "title"})
+        response = self.client.post("/api/questions",
+                                    json={"searchTerm": "title"})
         data = json.loads(response.data)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(data["success"], True)
         self.assertIn("questions", data)
         self.assertIn("total_questions", data)
+
+    def test_fail_search_question(self):
+        """
+        tests searching for a question with a search term
+        that contains special characters
+        """
+
+        response = self.client.post("/api/questions",
+                                    json={"searchTerm": "'1=1'%&"})
+        data = json.loads(response.data)
+
+        self.assertEqual(response.status_code, 422)
+        self.assertEqual(data["success"], False)
 
     def test_create_question(self):
         """
@@ -135,7 +173,8 @@ class TriviaTestCase(unittest.TestCase):
 
     def test_fail_create_question(self):
         """
-        tests creating a new question with missing body arguments (answer, difficulty)
+        tests creating a new question with missing
+        body arguments (answer, difficulty)
         """
 
         response = self.client.post(
@@ -152,7 +191,8 @@ class TriviaTestCase(unittest.TestCase):
 
     def test_retrive_quiz_question(self):
         """
-        tests retriving a random quiz question from a category that is not in the previous questions
+        tests retriving a random quiz question from a
+        category that is not in the previous questions
         """
 
         response = self.client.post(
